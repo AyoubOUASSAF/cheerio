@@ -41,7 +41,7 @@ app.post('/scrape', async (req, res) => {
         const searchResultHTML = searchResponse.data;
         const searchResult$ = cheerio.load(searchResultHTML);
 
-        const trovatiHTML = searchResult$('.col-sm-9 risultati--ricerca').html();
+        const trovatiHTML = searchResult$('.ricerca--item').html();
 
         const results = []; // Modify your scraping logic here
 
