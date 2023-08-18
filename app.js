@@ -28,15 +28,20 @@ app.post('/scrape', async (req, res) => {
         const $ = cheerio.load(response.data);
 
         const inputElement = $('input#_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase');
-        const searchButton = $('button#_GaSearch_INSTANCE_2NDgCF3zWBwk_submitButton');
+        const form = $('form#fm1'); // Select the form by its ID
 
         inputElement.val(query);
-        searchButton.click();
 
-        // Introduce a delay after clicking the search button
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Adjust the delay time as needed
+        // Submit the form using Axios
+        const formData = new URLSearchParams(new FormData(form[0]));
+        const searchResponse = await axios.post(url, formData, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
 
-        const trovatiHTML = $('.col-sm-12').html();
+        const searchResultHTML = searchResponse.data;
+        const searchResult$ = cheerio.load(searchResultHTML);
+
+        const trovatiHTML = searchResult$('.col-sm-12 h2').html();
 
         const results = []; // Modify your scraping logic here
 
