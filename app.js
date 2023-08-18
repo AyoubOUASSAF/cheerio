@@ -45,6 +45,10 @@ app.post('/scrape', async (req, res) => {
         }
 
         console.log("Scraping complete");
+
+        // Introduce a delay before rendering to give time for results to populate
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         res.render('index', { results: results, error: null });
     } catch (error) {
         console.error("Error occurred during scraping:", error);
