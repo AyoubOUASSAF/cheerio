@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { JSDOM } = require('jsdom');
+const { Parser } = require('htmlparser2');
 
 const app = express();
 
@@ -25,29 +25,39 @@ app.post('/scrape', async (req, res) => {
         const url = "https://www.giustizia-amministrativa.it/dcsnprr";
         const response = await axios.get(url);
 
-        const dom = new JSDOM(response.data);
-        const document = dom.window.document;
-
-        const linkElements = document.querySelectorAll('.visited-provvedimenti');
-        const linkUrls = Array.from(linkElements).map(element => element.getAttribute('href'));
-
         const results = [];
+        let insideLink = false;
+        let currentLink = '';
 
-        for (let i = 0; i < Math.min(limit, linkUrls.length); i++) {
-            const linkUrl = linkUrls[i];
-            console.log(`Fetching: ${linkUrl}`);
-            const linkResponse = await axios.get(linkUrl);
-            const linkHtml = linkResponse.data;
-            const linkDom = new JSDOM(linkHtml);
-            const linkTitle = linkDom.window.document.querySelector('title').textContent;
-            results.push({
-                text: linkTitle,
-                href: linkUrl
-            });
-        }
+        const parser = new Parser({
+            onopentag(name, attributes) {
+                if (name === 'a' && attributes.class === 'visited-provvedimenti') {
+                    insideLink = true;
+                    currentLink = attributes.href;
+                }
+            },
+            ontext(text) {
+                if (insideLink) {
+                    console.log(`Fetching: ${currentLink}`);
+                    results.push({
+                        text: text.trim(),
+                        href: currentLink
+                    });
+                }
+            },
+            onclosetag(name) {
+                if (name === 'a') {
+                    insideLink = false;
+                    currentLink = '';
+                }
+            }
+        }, { decodeEntities: true });
+
+        parser.write(response.data);
+        parser.end();
 
         console.log("Scraping complete");
-        res.render('index', { results: results, error: null });
+        res.render('index', { results: results.slice(0, limit), error: null });
     } catch (error) {
         console.error("Error occurred during scraping:", error);
         res.render('index', { results: null, error: "There was an error processing your request. Please try again later." });
