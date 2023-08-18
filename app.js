@@ -27,22 +27,18 @@ app.post('/scrape', async (req, res) => {
 
         const $ = cheerio.load(response.data);
 
-        // Extract the "Trovati risultati" message HTML
-        const trovatiHTML = $('.container-fluid').html();
+        const inputElement = $('input#_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase');
+        const searchButton = $('button#_GaSearch_INSTANCE_2NDgCF3zWBwk_submitButton');
 
-        const linkElements = $('.visited-provvedimenti');
-        const linkUrls = linkElements.map((index, element) => $(element).attr('href')).get();
+        inputElement.val(query);
+        searchButton.click();
 
-        const results = [];
+        // Introduce a delay after clicking the search button
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Adjust the delay time as needed
 
-        for (let i = 0; i < Math.min(limit, linkUrls.length); i++) {
-            // Your scraping logic here...
+        const trovatiHTML = $('.col-sm-12 h2').html();
 
-            results.push({
-                text: linkTitle,
-                href: linkUrl
-            });
-        }
+        const results = []; // Modify your scraping logic here
 
         res.render('index', { results: results, error: null, trovati: trovatiHTML });
     } catch (error) {
