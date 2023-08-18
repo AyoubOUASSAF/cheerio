@@ -34,6 +34,7 @@ app.post('/scrape', async (req, res) => {
 
         for (let i = 0; i < Math.min(limit, linkUrls.length); i++) {
             const linkUrl = linkUrls[i];
+            console.log(`Fetching: ${linkUrl}`);
             const linkResponse = await axios.get(linkUrl);
             const linkHtml = linkResponse.data;
             const linkTitle = cheerio.load(linkHtml)('title').text();
@@ -43,6 +44,7 @@ app.post('/scrape', async (req, res) => {
             });
         }
 
+        console.log("Scraping complete");
         res.render('index', { results: results, error: null });
     } catch (error) {
         console.error("Error occurred during scraping:", error);
