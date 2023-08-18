@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const cheerio = require('cheerio');
+const { JSDOM } = require('jsdom');
 
 const app = express();
 
@@ -23,31 +23,23 @@ app.post('/scrape', async (req, res) => {
         const limit = parseInt(req.body.limit, 10);
 
         const url = "https://www.giustizia-amministrativa.it/dcsnprr";
-        console.log(`Fetching main page: ${url}`);
-        
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-            }
-        });
+        const response = await axios.get(url);
 
-        const $ = cheerio.load(response.data);
+        const dom = new JSDOM(response.data);
+        const document = dom.window.document;
 
-        const linkElements = $('.visited-provvedimenti');
-        const linkUrls = linkElements.map((index, element) => $(element).attr('href')).get();
+        const linkElements = document.querySelectorAll('.visited-provvedimenti');
+        const linkUrls = Array.from(linkElements).map(element => element.getAttribute('href'));
 
         const results = [];
 
         for (let i = 0; i < Math.min(limit, linkUrls.length); i++) {
             const linkUrl = linkUrls[i];
-            console.log(`Fetching link: ${linkUrl}`);
-            const linkResponse = await axios.get(linkUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-                }
-            });
+            console.log(`Fetching: ${linkUrl}`);
+            const linkResponse = await axios.get(linkUrl);
             const linkHtml = linkResponse.data;
-            const linkTitle = cheerio.load(linkHtml)('title').text();
+            const linkDom = new JSDOM(linkHtml);
+            const linkTitle = linkDom.window.document.querySelector('title').textContent;
             results.push({
                 text: linkTitle,
                 href: linkUrl
@@ -55,7 +47,6 @@ app.post('/scrape', async (req, res) => {
         }
 
         console.log("Scraping complete");
-        console.log("Results:", results);
         res.render('index', { results: results, error: null });
     } catch (error) {
         console.error("Error occurred during scraping:", error);
