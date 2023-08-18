@@ -20,8 +20,18 @@ app.get('/search', async (req, res) => {
     try {
         const query = req.query.q; // Get the search query from the URL parameter
 
-        // Replace this with your scraping logic using axios and cheerio
-        const results = await scrapeGoogle(query);
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        const response = await axios.get(searchUrl);
+
+        const $ = cheerio.load(response.data);
+
+        const results = [];
+
+        $('h3').each((index, element) => {
+            const title = $(element).text();
+            const link = $(element).parent().attr('href');
+            results.push({ title, link });
+        });
 
         res.render('index', { results: results, error: null });
     } catch (error) {
