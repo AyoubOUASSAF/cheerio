@@ -28,7 +28,7 @@ app.post('/scrape', async (req, res) => {
         const $ = cheerio.load(response.data);
 
         // Extract the "Trovati risultati" message HTML
-        const trovatiHTML = $('.row').html();
+        const trovatiHTML = $('.container-fluid').html();
 
         const linkElements = $('.visited-provvedimenti');
         const linkUrls = linkElements.map((index, element) => $(element).attr('href')).get();
