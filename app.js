@@ -36,7 +36,7 @@ app.post('/scrape', async (req, res) => {
         // Introduce a delay after clicking the search button
         await new Promise(resolve => setTimeout(resolve, 5000)); // Adjust the delay time as needed
 
-        const trovatiHTML = $('.col-sm-12 h2').html();
+        const trovatiHTML = $('.col-sm-12').html();
 
         const results = []; // Modify your scraping logic here
 
