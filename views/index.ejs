@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NodeJS Scraper</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    <style>
+        #custom-spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3em;
+            border-color: #336666 transparent #336666 transparent;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+
+
+        .fa-file-pdf {
+            color: red;
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body class="bg-light py-5">
+
+    <div class="container">
+        <% if (error) { %>
+            <div class="alert alert-danger" role="alert">
+                <%= error %>
+            </div>
+            <% } %>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">Giustizia Amministrativa Cerca</div>
+                            <div class="card-body">
+                                <form action="/scrape" method="post">
+                                    <div class="form-group">
+                                        <label for="query">Che contenga la seguente frase:</label>
+                                        <input type="text" class="form-control" id="query" name="query" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="limit">Numero di Risultati:</label>
+                                        <input type="number" class="form-control" id="limit" name="limit" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Cerca</button>
+                                </form>
+                            </div>
+                        </div>
+                        <% if (results && results.length> 0) { %>
+                            <div class="card mt-4">
+                                <div class="card-header">Scraped Results</div>
+                                <div class="card-body">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Testo del link</th>
+                                                <th>Open PDF</th> <!-- Modified heading -->
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% results.forEach(result=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= result.text %>
+                                                    </td>
+                                                    <td><a href="<%= result.href %>" target="_blank"><i
+                                                                class="fas fa-file-pdf"></i></a></td>
+                                                    <!-- Modified column content -->
+                                                </tr>
+                                                <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <% } %>
+
+                                <div class="spinner-border" id="custom-spinner" role="status" style="display: none;">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+
+
+                    </div>
+                </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("form").submit(function () {
+                $("#custom-spinner").show();  // Targeting the new spinner ID
+                $("button[type=submit]").prop("disabled", true); // Optionally disable the submit button to prevent multiple submissions
+            });
+        });
+    </script>
+
+</body>
+
+</html>
