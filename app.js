@@ -21,6 +21,8 @@ app.post('/scrape', async (req, res) => {
   try {
     const query = req.body.query;
     const url = `https://www.giustizia-amministrativa.it/web/guest/dcsnprr?p_p_id=GaSearch_INSTANCE_2NDgCF3zWBwk&p_p_state=normal&p_p_mode=view&_GaSearch_INSTANCE_2NDgCF3zWBwk_javax.portlet.action=searchProvvedimenti&p_auth=pMaLCt4Z&p_p_lifecycle=0&_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase=${encodeURIComponent(query)}`;
+    
+    console.log("Fetching main page:", url);
 
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
@@ -31,6 +33,8 @@ app.post('/scrape', async (req, res) => {
       const link = $(element).find('a.visited-provvedimenti');
       const linkText = link.text();
       const linkUrl = link.attr('href');
+      
+      console.log(`Result ${index + 1}:`, linkText, linkUrl);
 
       results.push({
         text: linkText,
@@ -38,6 +42,7 @@ app.post('/scrape', async (req, res) => {
       });
     });
 
+    console.log("Scraping complete");
     res.render('index', { results: results, error: null });
   } catch (error) {
     console.error("Error occurred during scraping:", error);
