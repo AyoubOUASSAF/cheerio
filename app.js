@@ -45,6 +45,7 @@ app.post('/scrape', async (req, res) => {
         }
 
         console.log("Scraping complete");
+        console.log("Results:", results); // Log the scraped results
 
         // Introduce a delay before rendering to give time for results to populate
         await new Promise(resolve => setTimeout(resolve, 2000));
