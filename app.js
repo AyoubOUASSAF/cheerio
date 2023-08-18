@@ -13,44 +13,45 @@ app.set('view engine', 'ejs');
 
 // Serve the form on the root route
 app.get('/', (req, res) => {
-  res.render('index', { results: [], error: null });
+    res.render('index', { results: null, error: null, trovati: null });
 });
 
 // Handle form submission
 app.post('/scrape', async (req, res) => {
-  try {
-    const query = req.body.query;
-    const url = `https://www.giustizia-amministrativa.it/web/guest/dcsnprr?p_p_id=GaSearch_INSTANCE_2NDgCF3zWBwk&p_p_state=normal&p_p_mode=view&_GaSearch_INSTANCE_2NDgCF3zWBwk_javax.portlet.action=searchProvvedimenti&p_auth=pMaLCt4Z&p_p_lifecycle=0&_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase=${encodeURIComponent(query)}`;
-    
-    console.log("Fetching main page:", url);
+    try {
+        const query = req.body.query;
+        const limit = parseInt(req.body.limit, 10);
 
-    const response = await axios.get(url);
-    const $ = cheerio.load(response.data);
+        const url = "https://www.giustizia-amministrativa.it/web/guest/dcsnprr";
+        const response = await axios.get(url);
 
-    const results = [];
+        const $ = cheerio.load(response.data);
 
-    $('.ricerca--item__footer').each((index, element) => {
-      const link = $(element).find('a.visited-provvedimenti');
-      const linkText = link.text();
-      const linkUrl = link.attr('href');
-      
-      console.log(`Result ${index + 1}:`, linkText, linkUrl);
+        // Extract the "Trovati risultati" message HTML
+        const trovatiHTML = $('.col-sm-12 h2').html();
 
-      results.push({
-        text: linkText,
-        href: linkUrl
-      });
-    });
+        const linkElements = $('.visited-provvedimenti');
+        const linkUrls = linkElements.map((index, element) => $(element).attr('href')).get();
 
-    console.log("Scraping complete");
-    res.render('index', { results: results, error: null });
-  } catch (error) {
-    console.error("Error occurred during scraping:", error);
-    res.render('index', { results: [], error: "There was an error processing your request. Please try again later." });
-  }
+        const results = [];
+
+        for (let i = 0; i < Math.min(limit, linkUrls.length); i++) {
+            // Your scraping logic here...
+
+            results.push({
+                text: linkTitle,
+                href: linkUrl
+            });
+        }
+
+        res.render('index', { results: results, error: null, trovati: trovatiHTML });
+    } catch (error) {
+        console.error("Error occurred during scraping:", error);
+        res.render('index', { results: null, error: "There was an error processing your request. Please try again later.", trovati: null });
+    }
 });
 
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
-  console.log(`Server started on http://localhost:${PORT}`);
+    console.log(`Server started on http://localhost:${PORT}`);
 });
