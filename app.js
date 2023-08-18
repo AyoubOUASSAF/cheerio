@@ -20,16 +20,22 @@ app.get('/search', async (req, res) => {
     try {
         const query = req.query.q; // Get the search query from the URL parameter
 
-        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        const response = await axios.get(searchUrl);
+        const searchUrl = "https://www.giustizia-amministrativa.it/web/guest/dcsnprr?p_p_id=GaSearch_INSTANCE_2NDgCF3zWBwk&p_p_state=normal&p_p_mode=view&_GaSearch_INSTANCE_2NDgCF3zWBwk_javax.portlet.action=searchProvvedimenti&p_auth=pMaLCt4Z&p_p_lifecycle=0";
+        
+        const response = await axios.post(searchUrl, `_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase=${encodeURIComponent(query)}`, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
 
         const $ = cheerio.load(response.data);
 
         const results = [];
 
-        $('h3').each((index, element) => {
-            const title = $(element).text();
-            const link = $(element).parent().attr('href');
+        $('.ricerca--item').each((index, element) => {
+            const linkElement = $(element).find('.visited-provvedimenti');
+            const link = linkElement.attr('href');
+            const title = linkElement.find('a').text();
             results.push({ title, link });
         });
 
