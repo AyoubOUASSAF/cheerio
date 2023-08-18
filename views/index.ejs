@@ -8,26 +8,27 @@
 </head>
 
 <body>
-    <h1>Google Search</h1>
-    
-    <form id="searchForm" action="/search" method="GET">
-        <label for="query">Search Query:</label>
-        <input type="text" id="query" name="q" required>
-        <button type="submit">Search</button>
-    </form>
-
-    <div id="results">
-        <% if (results) { %>
-            <% results.forEach((result, index) => { %>
-                <div class="result">
-                    <h3><%= index + 1 %>. <%= result.title %></h3>
-                    <a href="<%= result.link %>" target="_blank"><%= result.link %></a>
-                </div>
-            <% }); %>
-        <% } else if (error) { %>
-            <p><%= error %></p>
-        <% } %>
+    <div class="container">
+      <h2>Web Scraper</h2>
+      <form action="/scrape" method="post">
+        <div class="form-group">
+          <label for="query">Search Term:</label>
+          <input type="text" class="form-control" id="query" name="query" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+  
+      <% if (results.length > 0) { %>
+      <h3>Results:</h3>
+      <ul>
+        <% results.forEach(result => { %>
+        <li><a href="<%= result.href %>" target="_blank"><%= result.text %></a></li>
+        <% }); %>
+      </ul>
+      <% } else if (error) { %>
+      <p>Error: <%= error %></p>
+      <% } %>
     </div>
-</body>
-
-</html>
+  </body>
+  
+  </html>
