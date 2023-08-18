@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const axios = require('axios');
-const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 const app = express();
 
 // Middleware to parse POST data
@@ -16,37 +15,52 @@ app.get('/', (req, res) => {
 });
 
 // Handle form submission
-app.get('/search', async (req, res) => {
+app.post('/scrape', async (req, res) => {
     try {
-        const query = req.query.q; // Get the search query from the URL parameter
+        const query = req.body.query;
+        const limit = parseInt(req.body.limit, 10);
 
-        const searchUrl = "https://www.giustizia-amministrativa.it/web/guest/dcsnprr?p_p_id=GaSearch_INSTANCE_2NDgCF3zWBwk&p_p_state=normal&p_p_mode=view&_GaSearch_INSTANCE_2NDgCF3zWBwk_javax.portlet.action=searchProvvedimenti&p_auth=pMaLCt4Z&p_p_lifecycle=0";
-        
-        const response = await axios.post(searchUrl, `_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase=${encodeURIComponent(query)}`, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+
+        const url = "https://www.giustizia-amministrativa.it/dcsnprr";
+        await page.goto(url);
+
+        const advancedSearchSelector = 'div:contains("Ricerca Avanzata")';
+        await page.click(advancedSearchSelector);
+
+        const inputSelector = '#_GaSearch_INSTANCE_2NDgCF3zWBwk_searchPhrase';
+        await page.type(inputSelector, query);
+
+        const searchButtonSelector = '#_GaSearch_INSTANCE_2NDgCF3zWBwk_submitButton';
+        await page.click(searchButtonSelector);
+
+        await page.waitForTimeout(5000);
+
+        const linkUrls = await page.evaluate(() => {
+            const links = Array.from(document.querySelectorAll('.visited-provvedimenti'));
+            return links.map(link => link.href);
         });
-
-        const $ = cheerio.load(response.data);
 
         const results = [];
 
-        $('.ricerca--item').each((index, element) => {
-            const linkElement = $(element).find('.visited-provvedimenti');
-            const link = linkElement.attr('href');
-            const title = linkElement.find('a').text();
-            results.push({ title, link });
-        });
+        for (let i = 0; i < Math.min(limit, linkUrls.length); i++) {
+            const linkUrl = linkUrls[i];
+            results.push({
+                text: `Link ${i + 1}`,
+                href: linkUrl
+            });
+        }
+
+        await browser.close();
 
         res.render('index', { results: results, error: null });
     } catch (error) {
-        console.error("Error occurred during search:", error);
+        console.error("Error occurred during scraping:", error);
         res.render('index', { results: null, error: "There was an error processing your request. Please try again later." });
     }
 });
 
-// Start the server
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
     console.log(`Server started on http://localhost:${PORT}`);
