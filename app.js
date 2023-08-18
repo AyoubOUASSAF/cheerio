@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const cheerio = require('cheerio');
-
 const app = express();
 
 // Middleware to parse POST data
@@ -17,38 +16,21 @@ app.get('/', (req, res) => {
 });
 
 // Handle form submission
-app.post('/scrape', async (req, res) => {
+app.get('/search', async (req, res) => {
     try {
-        const query = req.body.query;
-        const limit = parseInt(req.body.limit, 10);
+        const query = req.query.q; // Get the search query from the URL parameter
 
-        const url = `https://www.giustizia-amministrativa.it/dcsnprr?query=${query}`;
-        const response = await axios.get(url);
-
-        const $ = cheerio.load(response.data);
-
-        const results = [];
-
-        $('.visited-provvedimenti').each((index, element) => {
-            const linkUrl = $(element).attr('href');
-            const linkTitle = $(element).text();
-            results.push({
-                text: linkTitle,
-                href: linkUrl
-            });
-
-            if (results.length >= limit) {
-                return false; // Stop the loop when reaching the limit
-            }
-        });
+        // Replace this with your scraping logic using axios and cheerio
+        const results = await scrapeGoogle(query);
 
         res.render('index', { results: results, error: null });
     } catch (error) {
-        console.error("Error occurred during scraping:", error);
+        console.error("Error occurred during search:", error);
         res.render('index', { results: null, error: "There was an error processing your request. Please try again later." });
     }
 });
 
+// Start the server
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
     console.log(`Server started on http://localhost:${PORT}`);
