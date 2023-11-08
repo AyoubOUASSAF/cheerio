@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:Cesare1939@/gps_analyses  # Adjust as needed
+    
+  db:
+    image: postgres:16 
+    environment:
+      POSTGRES_DB: gps_analyses  
+      POSTGRES_USER: postgres  
+      POSTGRES_PASSWORD: Cesare1939@  # Change this to your desired password
